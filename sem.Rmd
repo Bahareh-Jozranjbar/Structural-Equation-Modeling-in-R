@@ -1,0 +1,61 @@
+---
+title: "sem"
+author: "Bahareh Jozranjbar"
+date: "2025-05-09"
+output: html_document
+
+---
+
+```{r, message=FALSE, warning=FALSE}
+# Load required packages
+library(lavaan)
+library(semPlot)
+
+# Load the dataset
+data_url <- "https://stats.idre.ucla.edu/wp-content/uploads/2021/02/worland5.csv"
+dataset <- read.csv(data_url)
+
+# View the column names (just to understand what's in the dataset)
+names(dataset)
+
+
+```
+```{r}
+# Define the SEM model:
+# We assume two underlying traits (latent variables):
+#  - "personality" made up of motiv, harm, stabi
+#  - "academic" made up of verbal, read, arith, spell
+# These are influenced by other variables (like ses, ppsych)
+
+model <- '
+  # Define latent variables
+  personality =~ motiv + harm + stabi
+  academic    =~ verbal + read + arith + spell
+
+  # Regression paths
+  personality ~ ses + ppsych
+  academic    ~ ses + ppsych + personality
+  ppsych      ~ personality
+
+  # Add correlated residuals (based on suggested improvements)
+  read ~~ spell
+  verbal ~~ read
+'
+
+```
+
+```{r}
+# Fit the model
+fit <- sem(model, data = dataset)
+
+# Show a summary with standardized estimates and fit indices
+summary(fit, fit.measures = TRUE, standardized = TRUE)
+
+```
+```{r}
+# Optional: Visualize the model
+semPaths(fit, what = "std", layout = "tree", edge.label.cex = 1.2,
+         sizeMan = 7, sizeLat = 9, residuals = FALSE)
+```
+
+
